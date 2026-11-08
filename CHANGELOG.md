@@ -1,5 +1,44 @@
 # Herdr changelog
 
+## [0.2.0] - 2026-11-08
+<!-- spotlight -->
+
+### New
+- **The window follows your language.** Chinese system locales show Simplified Chinese. Set language to "zh-CN" or "en" in settings; leave it out to follow the system. (#1, thanks @kezhuoquan)
+- **Run a saved shell task from the command palette.** Add task and Task list save a command for the current space, or for every space. One task runs at a time, in the background, not as a tab. Open, rerun or stop it from the list. (#2, thanks @kezhuoquan)
+- Mods can swap two panes in the same tab by id with pane.swap target. (#665, thanks @sQVe)
+
+### Fixed
+- Add machine tells you what to run in your own terminal instead of opening one.
+- A core that cannot connect shows the error instead of the install screen.
+- On Windows, Herdr checks which local agents are installed through the core.
+- A shared tab shows each agent's own title.
+- Reconnecting a terminal keeps the split layout.
+- Closing a dialog no longer closes the terminal tab or pane under it.
+- On macOS, herdr-app check stays out of the Dock. (#398, thanks @revofusion)
+- Codex started from the menu no longer uses a shared daemon. (#657, thanks @martintrifunov)
+- Layout previews stay inside their cards. (#621, thanks @martintrifunov)
+- kimi-code and kimicodecli use the Kimi icon. (#647, thanks @SuTang-vain)
+- While zoomed, agent navigation shows the pane it lands on. (#568, thanks @martintrifunov)
+- A kept sub-agent is listed once, under its parent. (#539, thanks @mertkaradayi)
+- Find highlights the whole of a wide character at the end of a match. (#587, thanks @chanyang721)
+- focused() reports a window's terminal while that window has the keyboard. (#554, thanks @thuanlm215)
+- The terminal menu leaves out pane items when there is no pane. (#553, thanks @thuanlm215)
+- The confirm dialog has rounded corners and sizes to its content. (#570, thanks @martintrifunov; #593, thanks @karlAlnebratt)
+- On Linux, KWin no longer shrinks the window to 20×20 at start. (#601, thanks @zdziejowski)
+- Pressing rename again closes the prompt. (#569, thanks @martintrifunov)
+- On Linux, fcitx4 input is no longer lost when focus changes. (#558, thanks @SailorMoonQ)
+- Worktree actions wait for large repositories.
+- Sidebar rail items sit on one line. (#453, thanks @log4b)
+- The changes list fills the panel and scrolls through every changed file. (#474, thanks @shadownrx)
+- The command palette shows ⌘ only on macOS. (#478, thanks @JJLiebig)
+- The settings dialog draws its rounded background. (#457, thanks @yankewei)
+- Long theme names stay inside their cards. (#437, thanks @martintrifunov)
+- The command palette keeps scrolling past group titles. (#531, thanks @patrick-xin)
+- Toasts name agents from the programs table. (#530, thanks @thuanlm215)
+- A click the program takes clears the selection. (#369, thanks @sundarshahi)
+- A new terminal still starts in the folder you asked for, and retries in home when that folder is unavailable. (#511, thanks @JJLiebig)
+
 ## [0.1.13] - 2026-11-04
 <!-- spotlight macos -->
 
