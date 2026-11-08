@@ -125,6 +125,11 @@ fn module(values: BTreeMap<String, Value>, calls: Rc<RefCell<Calls>>) -> HostMod
         shared.borrow_mut().shared.insert(a.string(0)?.into(), from_host(a.value(1)?));
         Ok(HostValue::Null)
     });
+    module = module.function("t", |a| {
+        let key = a.string(0)?.to_owned();
+        let vars = a.get(1).map(from_host);
+        Ok(HostValue::Str(crate::i18n::translate("en", &key, vars.as_ref())))
+    });
     for name in ["run", "playSound", "setAgentOrder", "openOverlay", "closeOverlay", "notify", "presentUpdateNotes"] {
         let calls = calls.clone();
         module = module.function(name, move |a| {

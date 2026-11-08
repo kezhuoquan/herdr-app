@@ -400,6 +400,9 @@ pub struct Person {
     /// Light or dark: the system's, or one always.
     #[serde(skip_serializing_if = "Appearance::is_system")]
     pub appearance: Appearance,
+    /// Interface language: `"en"` or `"zh-CN"`. Absent follows the system.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub theme: Option<crate::layout::ThemeChoice>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
@@ -458,6 +461,7 @@ impl Default for Person {
             minimum_contrast: 1.0,
             option_as_alt: OptionAsAlt::Auto,
             appearance: Appearance::System,
+            language: None,
             theme: None,
             colors: BTreeMap::new(),
         }
@@ -495,6 +499,8 @@ pub struct Settings {
     pub minimum_contrast: f32,
     pub option_as_alt: OptionAsAlt,
     pub sounds: Sounds,
+    /// The language in use: `"en"` or `"zh-CN"`.
+    pub language: String,
 }
 
 /// Attention sounds: when an agent needs you, and when one finished while you
@@ -537,6 +543,7 @@ impl Default for Settings {
             minimum_contrast: 1.0,
             option_as_alt: OptionAsAlt::Auto,
             sounds: Sounds::default(),
+            language: "en".into(),
         }
     }
 }
@@ -575,6 +582,7 @@ impl Settings {
             clipboard_write: person.clipboard_write,
             minimum_contrast: person.minimum_contrast,
             option_as_alt: person.option_as_alt,
+            language: crate::i18n::resolve(person.language.as_deref()).into(),
         }
     }
 }
@@ -688,6 +696,14 @@ pub fn telemetry_setting(person: &Result<Person, String>) -> bool {
 
 pub fn write_person(person: &Person) -> std::io::Result<()> {
     crate::persist::write_atomic(&path(), serde_json::to_string_pretty(person).unwrap_or_default() + "\n")
+}
+
+/// Loads settings.json onto the live settings so setup and menus can translate
+/// before a window composes a layout look.
+pub fn prime() {
+    if let Ok(person) = load_person() {
+        let _ = set(Settings::compose(&person, &crate::layout::Look::default(), true));
+    }
 }
 
 /// Installs new settings; returns whether anything changed.
@@ -941,11 +957,23 @@ mod tests {
     /// settings.json key.
     #[test]
     fn the_guide_explains_every_setting() {
-        let all = Person { core: Some(String::new()), font: Some(String::new()), font_size: Some(1.0), ui_font: Some(String::new()), telemetry: false, clipboard_write: false, appearance: Appearance::Light, theme: Some(crate::layout::ThemeChoice::One(String::new())), colors: [("text".into(), String::new())].into(), ..Person::default() };
+        let all = Person { core: Some(String::new()), font: Some(String::new()), font_size: Some(1.0), ui_font: Some(String::new()), telemetry: false, clipboard_write: false, appearance: Appearance::Light, language: Some("zh-CN".into()), theme: Some(crate::layout::ThemeChoice::One(String::new())), colors: [("text".into(), String::new())].into(), ..Person::default() };
         let keys: Vec<String> = serde_json::to_value(&all).unwrap().as_object().unwrap().keys().cloned().collect();
         let guide = include_str!("../defaults/AGENTS.md");
         let section = guide.split("## The person").nth(1).and_then(|s| s.split("\n## ").next()).unwrap_or_default();
         let missing: Vec<&String> = keys.iter().filter(|k| !section.contains(&format!("`{k}`"))).collect();
         assert!(missing.is_empty(), "defaults/AGENTS.md (## The person) doesn't explain: {missing:?}");
+    }
+
+    #[test]
+    fn language_is_optional_and_an_unknown_value_shows_english() {
+        let absent: Person = serde_json::from_str("{}").unwrap();
+        assert!(absent.language.is_none());
+        assert!(!serde_json::to_string(&Person::default()).unwrap().contains("language"));
+        let chosen: Person = serde_json::from_str(r#"{"language":"zh-CN"}"#).unwrap();
+        assert_eq!(Settings::compose(&chosen, &crate::layout::Look::default(), true).language, "zh-CN");
+        let unknown: Person = serde_json::from_str(r#"{"language":"fr"}"#).unwrap();
+        assert_eq!(unknown.language.as_deref(), Some("fr"));
+        assert_eq!(Settings::compose(&unknown, &crate::layout::Look::default(), true).language, "en");
     }
 }

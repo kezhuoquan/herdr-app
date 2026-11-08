@@ -3,7 +3,7 @@
 
 import { View, div, image, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { agents, terminals, panes, focused, spaces, run, theme, shared, setShared, setAgentOrder, openOverlay, closeOverlay, props, window, layout } from "herdr";
+import { agents, terminals, panes, focused, spaces, run, theme, shared, setShared, setAgentOrder, openOverlay, closeOverlay, props, window, layout, t as tr } from "herdr";
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -53,19 +53,19 @@ const kidStatus = (k, listed) => {
   return s === "error" ? "blocked" : s === "done" ? "idle" : s;
 };
 const SORTS = [
-  { id: "priority", label: "Priority", icon: "clock" },
-  { id: "grouped", label: "Grouped by space", icon: "layers" },
+  { id: "priority", label: "agents.sort_priority", icon: "clock" },
+  { id: "grouped", label: "agents.sort_grouped", icon: "layers" },
 ];
 const sortOf = () => SORTS.find((s) => s.id === shared("agents.sort")) ?? SORTS[0];
-const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
+const SECTION = { 4: "status.needs_you", 3: "status.done", 2: "status.working", 1: "status.idle" };
 const SECTION_STATUS = { 4: "blocked", 3: "done", 2: "working" };
 
 function duration(ms) {
   const m = Math.floor(ms / 60000);
-  if (m < 1) return "<1m";
-  if (m < 60) return `${m}m`;
+  if (m < 1) return tr("agents.duration_under");
+  if (m < 60) return tr("agents.duration_minutes", { n: m });
   const h = Math.floor(m / 60);
-  return h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`;
+  return h < 24 ? tr("agents.duration_hours", { n: h }) : tr("agents.duration_days", { n: Math.floor(h / 24) });
 }
 
 // The agent's icon from the app's program table: a one-color glyph or a picture.
@@ -148,7 +148,7 @@ export default class Agents extends View {
       .p(5)
       .bg(t.popover)
       .text_size(12.8)
-      .child(div().px(8).pt(4).pb(6).text_size(11).text_color(t.dim).child("Sort agents"))
+      .child(div().px(8).pt(4).pb(6).text_size(11).text_color(t.dim).child(tr("agents.sort_menu")))
       .children(SORTS.map((s) => h_flex()
         .id(`sort-${s.id}`)
         .h(31)
@@ -163,7 +163,7 @@ export default class Agents extends View {
           closeOverlay(props().overlay);
         })
         .child(svg(`mods/workspace-chrome/${s.icon}.svg`).size(14).flex_none().text_color(t.muted))
-        .child(div().flex_1().child(s.label))
+        .child(div().flex_1().child(tr(s.label)))
         .when(s.id === on, (el) => el.child(svg("mods/workspace-chrome/check.svg").size(14).flex_none().text_color(t.foreground)))));
   }
 
@@ -214,7 +214,7 @@ export default class Agents extends View {
     const color = t[a.status] ?? t.dim;
     if (a.status === "working") return svg("mods/workspace-chrome/spinner.svg").size(12).mx(1).flex_none().text_color(t.working).spin(900);
     if (a.status === "blocked" && compact) return div().size(14).flex_none().rounded(4).bg(t.blocked + "26").text_size(10.5).font_bold().text_color(t.blocked).flex().items_center().justify_center().child("!");
-    if (a.status === "blocked") return div().flex_none().px(6).h(18).rounded(5).bg(t.blocked + "26").text_size(10.5).font_semibold().text_color(t.blocked).flex().items_center().child("Needs you");
+    if (a.status === "blocked") return div().flex_none().px(6).h(18).rounded(5).bg(t.blocked + "26").text_size(10.5).font_semibold().text_color(t.blocked).flex().items_center().child(tr("status.needs_you"));
     // Idle: a ring; done: a dot.
     if (a.status === "idle") return div().size(7).mx(3).flex_none().rounded(4).border(1.5).border_color(t.idle ?? t.dim);
     return div().size(7).mx(3).flex_none().rounded(4).bg(a.status === "done" ? color : t.dim + "00");
@@ -329,7 +329,7 @@ export default class Agents extends View {
         .text_color(t.dim)
         .cursor_pointer()
         .hover((s) => s.bg(t.hover).text_color(t.foreground))
-        .tooltip(isPinned ? "Unpin" : "Pin to the top")
+        .tooltip(isPinned ? tr("agents.unpin") : tr("agents.pin"))
         .on_click((_e, cx) => {
           cx.stop_propagation();
           run("terminal.pin", { terminal: a.address, pinned: !isPinned });
@@ -377,12 +377,12 @@ export default class Agents extends View {
 
     // Groups in list order: spaces (grouped) or priority sections. Agents of a
     // space are next to each other in agents(), so neighbours make a group.
-    const groups = pinned.length ? [{ id: "pinned", label: "Pinned", status: null, members: pinned }] : [];
+    const groups = pinned.length ? [{ id: "pinned", label: tr("agents.pinned"), status: null, members: pinned }] : [];
     for (const a of rest) {
       const r = rankOf(a) || RANK.idle;
       const id = byPriority ? `sec-${r}` : `sp-${a.space}`;
       if (groups.at(-1)?.id === id) groups.at(-1).members.push(a);
-      else groups.push({ id, label: byPriority ? SECTION[r] : a.space_name || "", status: byPriority ? SECTION_STATUS[r] : null, members: [a] });
+      else groups.push({ id, label: byPriority ? tr(SECTION[r]) : a.space_name || "", status: byPriority ? SECTION_STATUS[r] : null, members: [a] });
     }
 
     // A group's header; it folds the group. Folded, it says how many and the most urgent state.
@@ -433,7 +433,7 @@ export default class Agents extends View {
             .flex_none()
             .items_center()
             .justify_between()
-            .child(div().text_size(11.5).font_medium().text_color(t.dim).child("Agents"))
+            .child(div().text_size(11.5).font_medium().text_color(t.dim).child(tr("agents.title")))
             .child(
               div()
                 .id("ag-sort")
@@ -441,13 +441,13 @@ export default class Agents extends View {
                 .text_color(t.dim)
                 .hover((s) => s.text_color(t.foreground))
                 .on_click(() => openOverlay({ mod: "agents", kind: "popup", width: 200, height: 140, props: { sortMenu: true } }))
-                .tooltip(`Sort agents: ${sort.label}`)
+                .tooltip(tr("agents.sort_tooltip", { name: tr(sort.label) }))
                 .child(svg(`mods/workspace-chrome/${sort.icon}.svg`).size(14)),
             ),
         ),
       )
       .when(list.length === 0 && !collapsed, (el) =>
-        el.child(div().px(12).text_size(12).text_color(t.dim).child("No agent status yet. Agents show up here when they report their status. Older versions and agents inside tmux may not.")),
+        el.child(div().px(12).text_size(12).text_color(t.dim).child(tr("agents.empty"))),
       )
       .child(v_flex().id("ag-list").flex_1().min_h(0).px(collapsed ? 0 : 8).overflow_y_scrollbar().mode("always").children(rows))
       .when(collapsed, (el) =>

@@ -2,7 +2,7 @@
 
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { panes, props, run, home } from "herdr";
+import { panes, props, run, home, t as tr } from "herdr";
 
 
 function folder(cwd) {
@@ -38,7 +38,7 @@ export default class TerminalsPane extends View {
     const g = p.program;
     const where = folder(p.cwd);
     // Shells often put the folder in their title already.
-    const title = p.title || "shell";
+    const title = p.title || tr("pane.shell");
     const dir = where && !title.includes(where) && !/^[~/]/.test(title) ? where : "";
     return h_flex()
       .id(`tm-head-${pane}`)
