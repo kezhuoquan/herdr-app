@@ -1,5 +1,11 @@
 # Herdr changelog
 
+## [0.2.1] - 2026-11-08
+
+### Fixed
+- Opening a file in the Files panel shows its preview again; 0.2.0 left a blank panel.
+- The terminals layout's top bar shows your tabs again; 0.2.0 made it go blank.
+
 ## [0.2.0] - 2026-11-08
 <!-- spotlight -->
 
