@@ -419,6 +419,22 @@ fn confirm_dialog_background_follows_the_frame_corners(cx: &mut TestAppContext) 
     assert!(root.contains(".rounded[Number(8.0)]"), "the dialog background must follow the frame's corners: {root}");
 }
 
+/// Opening a file must mount the preview, not leave it inside the closed-tree branch.
+#[gpui::test]
+fn files_preview_mounts_when_a_file_is_open(cx: &mut TestAppContext) {
+    cx.update(gpui_shell::init);
+    let staged = Staged::new();
+    let closed = describe(cx, &staged, "mods/files", true, props(), updates("current", "current"), None).unwrap();
+    assert!(closed.contains("files-tree"), "{closed}");
+    assert!(!closed.contains("Loading file\u{2026}"), "a closed panel must not preview: {closed}");
+    let open = describe(
+        cx, &staged, "mods/files", true, props(), updates("current", "current"),
+        Some("this.file = 'README.md';"),
+    ).unwrap();
+    assert!(open.contains("Loading file\u{2026}"), "the preview must mount when a file is open: {open}");
+    assert!(!open.contains("files-tree"), "the tree leaves while a file is open: {open}");
+}
+
 #[gpui::test]
 fn layout_previews_stay_inside_their_cards(cx: &mut TestAppContext) {
     cx.update(gpui_shell::init);

@@ -171,9 +171,11 @@ export default class Files extends View {
         .when(Boolean(this.file), el => el.child(div().id("files-back").w(20).cursor_pointer().text_color(t.muted).on_click((_e, cx) => { this.show(null); cx.notify(); }).child("←")))
         .child(div().font_semibold().child(tr("files.title")))
         .child(div().flex_1().min_w(0).truncate().text_right().text_size(12).text_color(t.dim).child(this.file ?? this.root?.split(/[\\/]/).pop() ?? "")))
+      // The preview .when must close this branch. A following .when stays inside the
+      // arrow, so opening a file hid the tree and never mounted the editor.
       .when(!this.file, el => el.child(v_flex().id("files-tree").flex_1().min_h(0).overflow_y_scrollbar().p(6).children(this.rows("", 0, [], t))
         .when(Boolean(this.error) || !this.entries.get("")?.length, el => el.child(div().p(8).text_size(12).text_color(t.dim).child(this.error || (this.loading ? tr("files.loading") : this.root ? tr("files.empty") : tr("files.no_folder")))))
-        .when(this.limited, el => el.child(div().p(8).text_size(11).text_color(t.dim).child(tr("files.limited")))))
-      .when(Boolean(this.file), el => el.child(this.code ? Editor.new(this.code).flex_1().min_h(0) : div().p(12).text_color(t.dim).child(this.fileError || tr("files.loading_file")))));
+        .when(this.limited, el => el.child(div().p(8).text_size(11).text_color(t.dim).child(tr("files.limited"))))))
+      .when(Boolean(this.file), el => el.child(this.code ? Editor.new(this.code).flex_1().min_h(0) : div().p(12).text_color(t.dim).child(this.fileError || tr("files.loading_file"))));
   }
 }
