@@ -838,6 +838,14 @@ has 120 programs (agents, editors, runtimes, tools, databases, infra);
   `spaces` sidebar nests worktree spaces under their repo's and shows each
   space's repo, branch, ahead/behind and uncommitted changes). Shipped mods
   are Herdr's; duplicate with `mod.clone` before editing.
+- `tasks` is the command-palette task runner (Add task, Task list). Definitions
+  and runs are shared `tasks.defs` and `tasks.runs`. A run is a background core
+  terminal (`hc run --bg`), labeled `herdr.task` and `herdr.run`, not a tab.
+  A task is for one space or global. Names are unique in that scope. Only one
+  task runs at a time. The list shows Run, Edit and Delete when it is idle, and
+  Open, Rerun and Stop while it is live. Run and Rerun open the output; Esc
+  returns to the list. The label is `当前空间 · name` for the active space, the
+  space's name for another, and `全局 · name` for a global task.
 
 ### Check before you finish
 
