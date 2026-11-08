@@ -26,6 +26,7 @@ function groups() {
     tr("palette.group.space"),
     tr("palette.group.layout"),
     tr("palette.group.terminal"),
+    tr("palette.group.task"),
     tr("palette.group.agent"),
     tr("palette.group.window"),
     tr("palette.group.app"),
@@ -35,7 +36,7 @@ function groups() {
 // The palette's names for commands: [command, args, group, title, keywords].
 // Keywords keep the English words and add Chinese, so search works in either language.
 function named() {
-  const [, Tab, Pane, Space, Layout, Terminal, Agent, Window, App] = groups();
+  const [, Tab, Pane, Space, Layout, Terminal, Task, Agent, Window, App] = groups();
   const dir = (d) => tr(`palette.dir.${d}`);
   const toward = { left: "左 左侧", right: "右 右侧", up: "上 上方", down: "下 下方" };
   return [
@@ -63,6 +64,9 @@ function named() {
     ["terminal.open", {}, Terminal, tr("palette.cmd.new_terminal"), "new terminal shell 新建 终端"],
     ["terminal.copy", {}, Terminal, tr("palette.cmd.copy"), "copy clipboard 复制 剪贴板"],
     ["terminal.paste", {}, Terminal, tr("palette.cmd.paste"), "paste clipboard 粘贴 剪贴板"],
+    // Fork: not app commands. go() opens the tasks mod instead of run().
+    ["tasks.show", { view: "add" }, Task, tr("palette.cmd.add_task"), "add task new task 增加任务 新建任务"],
+    ["tasks.show", { view: "list" }, Task, tr("palette.cmd.task_list"), "task list tasks 任务列表 任务"],
     ["agent.next", {}, Agent, tr("palette.cmd.next_agent"), "next agent 下一个 智能体"],
     ["agent.prev", {}, Agent, tr("palette.cmd.prev_agent"), "previous agent 上一个 智能体"],
     ["window.minimize", {}, Window, tr("palette.cmd.minimize"), "minimize window 最小化 窗口"],
@@ -100,7 +104,7 @@ function entries() {
   const NAMED = named();
   const known = new Set(commands().map((c) => c.name));
   const mac = win()?.platform === "macos";
-  const list = NAMED.filter(([n]) => known.has(n))
+  const list = NAMED.filter(([n]) => known.has(n) || n === "tasks.show")
     .filter(([n]) => !(mac && n.startsWith("window.")))
     .map(([name, args, group, title, words]) => ({ name, args, group, title, words }));
   for (const l of layouts()) {
@@ -173,6 +177,11 @@ export default class Palette extends View {
     this.recent = [e.id, ...this.recent.filter((r) => r !== e.id)].slice(0, 20);
     localStorage.setItem("recent", JSON.stringify(this.recent));
     this.close();
+    if (e.name === "tasks.show") {
+      const add = e.args?.view === "add";
+      openOverlay({ mod: "tasks", kind: "dialog", width: add ? 440 : 520, props: { view: add ? "add" : "list" } });
+      return;
+    }
     if (e.name === "mod.clone") {
       openOverlay({ mod: "prompt", kind: "dialog", width: 380, props: {
         title: tr("palette.cmd.duplicate_mod"), hint: tr("palette.duplicate_mod_hint"),

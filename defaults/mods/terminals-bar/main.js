@@ -2,7 +2,7 @@
 
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { spaces, panes, run, theme, home, openOverlay, window as win } from "herdr";
+import { spaces, panes, run, home, openOverlay, window as win } from "herdr";
 
 const C = {
   tray: "#1d1f22",
@@ -93,7 +93,6 @@ function iconButton(id, icon, onClick) {
 
 export default class TerminalsBar extends View {
   render() {
-    const t = theme();
     const space = spaces().find((p) => p.active);
     if (!space) return div();
     const all = panes();
