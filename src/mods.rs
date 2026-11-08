@@ -1054,6 +1054,11 @@ fn module(inst: Instance, copy: u64) -> HostModule {
         .function("window", reader(reads.clone(), "window", |s| &s.window))
         .function("theme", |_| Ok(to_host(&serde_json::to_value(&*crate::settings::theme()).unwrap_or(Value::Null))))
         .function("settings", |_| Ok(to_host(&serde_json::to_value(&*crate::settings::get()).unwrap_or(Value::Null))))
+        .function("t", |a| {
+            let key = a.string(0)?.to_owned();
+            let vars = a.get(1).map(from_host);
+            Ok(HostValue::Str(crate::i18n::t_with(&key, vars.as_ref())))
+        })
         .function("keys", |_| {
             let list: Vec<Value> = crate::keys::listing().into_iter().map(|(s, k, a)| json!({ "section": s, "keys": k, "action": a })).collect();
             Ok(to_host(&Value::Array(list)))

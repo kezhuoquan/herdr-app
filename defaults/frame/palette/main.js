@@ -7,7 +7,7 @@
 
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex, InputState, Input } from "gpui-base";
-import { commands, layouts, keys, run, theme, props, closeOverlay, openOverlay, shared, window as win } from "herdr";
+import { commands, layouts, keys, run, theme, props, closeOverlay, openOverlay, shared, window as win, t as tr } from "herdr";
 
 // The list keeps one height while you move: rows and group titles have fixed
 // heights, and the window shows as many as fit in LIST_H.
@@ -17,50 +17,69 @@ const SHOWN = 10;
 const ROW_H = 32;
 const HEAD_H = 26;
 const LIST_H = SHOWN * ROW_H;
-const GROUPS = ["Recent", "Tab", "Pane", "Space", "Layout", "Terminal", "Agent", "Window", "App"];
+
+function groups() {
+  return [
+    tr("palette.group.recent"),
+    tr("palette.group.tab"),
+    tr("palette.group.pane"),
+    tr("palette.group.space"),
+    tr("palette.group.layout"),
+    tr("palette.group.terminal"),
+    tr("palette.group.agent"),
+    tr("palette.group.window"),
+    tr("palette.group.app"),
+  ];
+}
 
 // The palette's names for commands: [command, args, group, title, keywords].
-const NAMED = [
-  ["tab.new", {}, "Tab", "New tab", "tab agent new task"],
-  ["mod.open", { name: "picker" }, "Tab", "Go to space or tab…", "switch jump find"],
-  ["tab.rename", {}, "Tab", "Rename tab", "tab"],
-  ["tab.close", {}, "Tab", "Close tab", "tab kill"],
-  ["tab.next", {}, "Tab", "Next tab", "tab"],
-  ["tab.prev", {}, "Tab", "Previous tab", "tab"],
-  ["pane.split", { direction: "right" }, "Pane", "Split right", "vertical"],
-  ["pane.split", { direction: "down" }, "Pane", "Split down", "horizontal"],
-  ["pane.close", {}, "Pane", "Close pane", "kill"],
-  ["pane.zoom", {}, "Pane", "Zoom pane", "maximize fullscreen"],
-  ...["left", "right", "up", "down"].map((d) => ["pane.go", { direction: d }, "Pane", `Focus pane ${d}`, "move go"]),
-  ...["left", "right", "up", "down"].map((d) => ["pane.swap", { direction: d }, "Pane", `Swap pane ${d}`, "move"]),
-  ["space.new", {}, "Space", "New space", "workspace"],
-  ["space.rename", {}, "Space", "Rename space", "workspace"],
-  ["space.close", {}, "Space", "Close space", "workspace kill"],
-  ["space.next", {}, "Space", "Next space", "workspace"],
-  ["space.prev", {}, "Space", "Previous space", "workspace"],
-  ["layout.switch", {}, "Layout", "Next layout", "look switch"],
-  ["layout.reset", {}, "Layout", "Reset layout", "new version default restore herdr's"],
-  ["layout.clone", {}, "Layout", "Duplicate layout", "clone copy customize"],
-  ["mod.clone", {}, "Layout", "Duplicate mod", "clone copy customize"],
-  ["terminal.open", {}, "Terminal", "New terminal", "shell"],
-  ["terminal.copy", {}, "Terminal", "Copy", "clipboard"],
-  ["terminal.paste", {}, "Terminal", "Paste", "clipboard"],
-  ["agent.next", {}, "Agent", "Next agent", ""],
-  ["agent.prev", {}, "Agent", "Previous agent", ""],
-  ["window.minimize", {}, "Window", "Minimize window", ""],
-  ["window.maximize", {}, "Window", "Maximize window", "restore"],
-  ["window.close", {}, "Window", "Close window", "quit"],
-  ["app.settings", {}, "App", "Settings", "preferences options config look font theme sound"],
-  ["app.help", {}, "App", "Keys", "keybindings shortcuts help"],
-  ["app.welcome", {}, "App", "Welcome", "intro start onboarding"],
-  ["app.whats_new", {}, "App", "What's new", "release changes news update"],
-  ["app.reset", {}, "App", "Reset to the default screen", "escape hatch broken restore"],
-  ["app.zoom_in", {}, "App", "Zoom in", "bigger font size"],
-  ["app.zoom_out", {}, "App", "Zoom out", "smaller font size"],
-  ["app.zoom_reset", {}, "App", "Reset zoom", "font size"],
-  ["app.quit", {}, "App", "Quit Herdr", "exit"],
-  ...["graphite", "ink", "moss", "atom-one-dark"].map((n) => ["app.theme", { name: n }, "App", `Theme: ${n.replace(/-/g, " ")}`, "colors look"]),
-];
+// Keywords keep the English words and add Chinese, so search works in either language.
+function named() {
+  const [, Tab, Pane, Space, Layout, Terminal, Agent, Window, App] = groups();
+  const dir = (d) => tr(`palette.dir.${d}`);
+  const toward = { left: "左 左侧", right: "右 右侧", up: "上 上方", down: "下 下方" };
+  return [
+    ["tab.new", {}, Tab, tr("palette.cmd.new_tab"), "new tab tab agent new task 标签 智能体 新建 任务"],
+    ["mod.open", { name: "picker" }, Tab, tr("palette.cmd.go_to"), "go to space or tab switch jump find 前往 空间 标签 切换 跳转 查找"],
+    ["tab.rename", {}, Tab, tr("palette.cmd.rename_tab"), "rename tab tab 标签 重命名"],
+    ["tab.close", {}, Tab, tr("palette.cmd.close_tab"), "close tab tab kill 标签 关闭"],
+    ["tab.next", {}, Tab, tr("palette.cmd.next_tab"), "next tab tab 标签 下一个"],
+    ["tab.prev", {}, Tab, tr("palette.cmd.prev_tab"), "previous tab tab 标签 上一个"],
+    ["pane.split", { direction: "right" }, Pane, tr("palette.cmd.split_right"), "split right vertical 向右 拆分 分割 垂直 窗格"],
+    ["pane.split", { direction: "down" }, Pane, tr("palette.cmd.split_down"), "split down horizontal 向下 拆分 分割 水平 窗格"],
+    ["pane.close", {}, Pane, tr("palette.cmd.close_pane"), "close pane kill 关闭 窗格"],
+    ["pane.zoom", {}, Pane, tr("palette.cmd.zoom_pane"), "zoom pane maximize fullscreen 放大 最大化 全屏 窗格"],
+    ...["left", "right", "up", "down"].map((d) => ["pane.go", { direction: d }, Pane, tr("palette.focus_pane", { direction: dir(d) }), `focus pane ${d} move go 聚焦 移动 窗格 ${toward[d]}`]),
+    ...["left", "right", "up", "down"].map((d) => ["pane.swap", { direction: d }, Pane, tr("palette.swap_pane", { direction: dir(d) }), `swap pane ${d} move 交换 移动 窗格 ${toward[d]}`]),
+    ["space.new", {}, Space, tr("palette.cmd.new_space"), "new space workspace 新建 空间 工作区"],
+    ["space.rename", {}, Space, tr("palette.cmd.rename_space"), "rename space workspace 重命名 空间 工作区"],
+    ["space.close", {}, Space, tr("palette.cmd.close_space"), "close space workspace kill 关闭 空间 工作区"],
+    ["space.next", {}, Space, tr("palette.cmd.next_space"), "next space workspace 下一个 空间 工作区"],
+    ["space.prev", {}, Space, tr("palette.cmd.prev_space"), "previous space workspace 上一个 空间 工作区"],
+    ["layout.switch", {}, Layout, tr("palette.cmd.next_layout"), "next layout look switch 下一个 布局 外观 切换"],
+    ["layout.reset", {}, Layout, tr("palette.cmd.reset_layout"), "reset layout new version default restore herdr's 重置 布局 默认 恢复"],
+    ["layout.clone", {}, Layout, tr("palette.cmd.duplicate_layout"), "duplicate layout clone copy customize 复制 布局 克隆 自定义"],
+    ["mod.clone", {}, Layout, tr("palette.cmd.duplicate_mod"), "duplicate mod clone copy customize 复制 模组 克隆 自定义"],
+    ["terminal.open", {}, Terminal, tr("palette.cmd.new_terminal"), "new terminal shell 新建 终端"],
+    ["terminal.copy", {}, Terminal, tr("palette.cmd.copy"), "copy clipboard 复制 剪贴板"],
+    ["terminal.paste", {}, Terminal, tr("palette.cmd.paste"), "paste clipboard 粘贴 剪贴板"],
+    ["agent.next", {}, Agent, tr("palette.cmd.next_agent"), "next agent 下一个 智能体"],
+    ["agent.prev", {}, Agent, tr("palette.cmd.prev_agent"), "previous agent 上一个 智能体"],
+    ["window.minimize", {}, Window, tr("palette.cmd.minimize"), "minimize window 最小化 窗口"],
+    ["window.maximize", {}, Window, tr("palette.cmd.maximize"), "maximize window restore 最大化 窗口 还原"],
+    ["window.close", {}, Window, tr("palette.cmd.close_window"), "close window quit 关闭 窗口 退出"],
+    ["app.settings", {}, App, tr("menu.settings"), "settings preferences options config look font theme sound 设置 偏好 选项 配置 外观 字体 主题 声音"],
+    ["app.help", {}, App, tr("palette.cmd.keys"), "keys keybindings shortcuts help 快捷键 按键 帮助"],
+    ["app.welcome", {}, App, tr("palette.cmd.welcome"), "welcome intro start onboarding 欢迎 介绍 开始 引导"],
+    ["app.whats_new", {}, App, tr("palette.cmd.whats_new"), "what's new release changes news update 更新说明 更新 发布"],
+    ["app.reset", {}, App, tr("palette.cmd.reset_screen"), "reset to the default screen escape hatch broken restore 恢复 默认 界面"],
+    ["app.zoom_in", {}, App, tr("palette.cmd.zoom_in"), "zoom in bigger font size 放大 更大 字体"],
+    ["app.zoom_out", {}, App, tr("palette.cmd.zoom_out"), "zoom out smaller font size 缩小 更小 字体"],
+    ["app.zoom_reset", {}, App, tr("palette.cmd.zoom_reset"), "reset zoom font size 重置 缩放 字体"],
+    ["app.quit", {}, App, tr("menu.quit"), "quit herdr exit 退出"],
+    ...["graphite", "ink", "moss", "atom-one-dark"].map((n) => ["app.theme", { name: n }, App, tr("palette.theme_named", { name: n.replace(/-/g, " ") }), `colors look theme ${n} theme: ${n.replace(/-/g, " ")} 颜色 外观 主题`]),
+  ];
+}
 
 // Commands that act on something you point at (ids, terminals): not for a list.
 const HIDDEN = new Set([
@@ -78,19 +97,21 @@ function titleOf(name) {
 
 // Every entry for the state we're in now.
 function entries() {
+  const NAMED = named();
   const known = new Set(commands().map((c) => c.name));
   const mac = win()?.platform === "macos";
   const list = NAMED.filter(([n]) => known.has(n))
     .filter(([n]) => !(mac && n.startsWith("window.")))
     .map(([name, args, group, title, words]) => ({ name, args, group, title, words }));
   for (const l of layouts()) {
-    const t = { main: "Herdr", terminals: "Terminals", win98: "Herdr 98" }[l] ?? l.charAt(0).toUpperCase() + l.slice(1);
-    list.push({ name: "layout.switch", args: { name: l }, group: "Layout", title: `Layout: ${t}`, words: `look ${l}` });
+    const label = { main: "Herdr", terminals: tr("palette.layout.terminals"), win98: "Herdr 98" }[l] ?? l.charAt(0).toUpperCase() + l.slice(1);
+    const english = { main: "Herdr", terminals: "Terminals", win98: "Herdr 98" }[l] ?? label;
+    list.push({ name: "layout.switch", args: { name: l }, group: tr("palette.group.layout"), title: tr("palette.layout_named", { name: label }), words: `look layout ${l} layout: ${english} 布局 外观${l === "terminals" ? " 终端" : ""}` });
   }
   // Anything new in the app shows up too, until it gets a better name here.
-  const named = new Set(NAMED.map(([n]) => n));
+  const namedIds = new Set(NAMED.map(([n]) => n));
   for (const c of commands()) {
-    if (named.has(c.name) || HIDDEN.has(c.name) || c.args.some((a) => a.required && a.name !== "name")) continue;
+    if (namedIds.has(c.name) || HIDDEN.has(c.name) || c.args.some((a) => a.required && a.name !== "name")) continue;
     list.push({ name: c.name, args: {}, ...titleOf(c.name), words: c.about });
   }
   return list.map((e) => ({ ...e, id: `${e.name}:${JSON.stringify(e.args)}` }));
@@ -131,7 +152,7 @@ function fuzzy(q, text) {
 export default class Palette extends View {
   init(_props, cx) {
     this.query = "";
-    this.input = InputState.new({ placeholder: "Type a command…" });
+    this.input = InputState.new({ placeholder: tr("palette.placeholder") });
     this.input.on("change", (_e, cx) => { this.query = this.input.value(); this.at = 0; cx.notify(); });
     this.input.on("submit", () => this.go(this.rows()[this.at]?.e));
     this.input.focus();
@@ -154,7 +175,7 @@ export default class Palette extends View {
     this.close();
     if (e.name === "mod.clone") {
       openOverlay({ mod: "prompt", kind: "dialog", width: 380, props: {
-        title: "Duplicate mod", hint: "Mod to copy; creates <name>-copy",
+        title: tr("palette.cmd.duplicate_mod"), hint: tr("palette.duplicate_mod_hint"),
         command: { name: "mod.clone", args: {} },
       } });
     } else {
@@ -165,12 +186,13 @@ export default class Palette extends View {
   // The rows to show: grouped when empty, ranked while typing.
   rows() {
     const all = entries();
+    const GROUPS = groups();
     const q = this.query.trim().toLowerCase().replace(/\s+/g, "");
     if (!q) {
       const recent = this.recent.map((id) => all.find((e) => e.id === id)).filter(Boolean).slice(0, 5);
       const rest = GROUPS.slice(1).flatMap((g) => all.filter((e) => e.group === g && !recent.includes(e)));
       const others = all.filter((e) => !GROUPS.includes(e.group) && !recent.includes(e));
-      return [...recent.map((e) => ({ e, head: "Recent" })), ...[...rest, ...others].map((e) => ({ e, head: e.group }))];
+      return [...recent.map((e) => ({ e, head: GROUPS[0] })), ...[...rest, ...others].map((e) => ({ e, head: e.group }))];
     }
     const rank = (e) => this.recent.indexOf(e.id);
     return all
@@ -315,7 +337,7 @@ export default class Palette extends View {
                 cx.notify();
               })
               .children(fixed ? list : [v_flex().children(list)])
-          : div().px(16).py(14).text_size(13).text_color(t.dim).child(`Nothing matches "${this.query}". Places are in the picker.`),
+          : div().px(16).py(14).text_size(13).text_color(t.dim).child(`${tr("palette.nothing_matches")}${tr("palette.nothing_query", { query: this.query })}`),
       );
   }
 }

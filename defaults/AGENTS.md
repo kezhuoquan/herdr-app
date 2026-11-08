@@ -673,6 +673,13 @@ What's about the user, never a look:
   precedence as fonts.
 - `appearance`: `"light"` or `"dark"` always; absent, the system's. A layout
   with a light and a dark theme shows the matching one.
+- `language`: `"en"` or `"zh-CN"`; absent, the system's. Chinese locales
+  (`zh`, `zh-CN`, `zh-Hans`, and traditional tags until a traditional catalog
+  exists) show Simplified Chinese; anything else shows English. An unknown
+  value is kept in the file and the interface stays English. `settings().language`
+  is the language in use (`"en"` or `"zh-CN"`). `t(key, vars?)` looks up
+  interface strings; missing keys fall back to English, then the key.
+  `{name}` is replaced from `vars`.
 - Updates: an installed app downloads them by itself and offers Restart and
   What changed. If the app crashes or is killed with a verified newer update
   waiting, the next launch installs it before opening a window. The first
@@ -882,7 +889,7 @@ Rules:
 - `main.js` default-exports a class extending `View`. `init(props, cx)` runs
   once; `render(cx)` describes the UI and runs again after `cx.notify()` and
   whenever Herdr's live data changes (spaces, agents, terminals, focus,
-  theme, shared state). Don't poll those.
+  theme, shared state, language). Don't poll those.
 - **Never keep a `cx` and use it later.** Every callback gets its own:
   `on_click((event, cx) => …)`, `cx.spawn(async (cx) => …)`,
   `cx.timer.every(ms, (cx) => …)`.
@@ -956,7 +963,8 @@ All of it is in `herdr.d.ts`. In short:
   accent_foreground, solid and solid_foreground (a primary button),
   selection, working, blocked, done, idle, unknown, ansi0..15; light and
   dark themes name the same ones), `settings()` (with `dark`: the
-  appearance now), `keys()`, `commands()` (every app
+  appearance now, and `language`: `"en"` or `"zh-CN"`), `t(key, vars?)`
+  (interface strings; English if a key is missing), `keys()`, `commands()` (every app
   command, its arguments and what it does), `layouts()` (the layout names).
   `focused().agent` is the agent an agent block shows.
   `focused().space`/`tab` describe the current window context. With a layout terminal

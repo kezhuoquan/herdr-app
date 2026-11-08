@@ -144,7 +144,7 @@ impl AppWindow {
                 .bg(c("popover"))
                 .text_xs()
                 .text_color(c("blocked"))
-                .child(format!("{} did not load: {e}", inst.name))
+                .child(crate::i18n::format("mod.did_not_load", &[("name", &inst.name), ("error", &e)]))
                 .into_any_element(),
             _ => div().into_any_element(),
         };

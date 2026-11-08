@@ -328,8 +328,13 @@ export function feedbackClearImages(): null;
 export function sendFeedback(body: import("gpui-kit").HostValue, images?: string[]): Promise<string | null>;
 
 /** What the app runs with: the shown layout's look (theme name, fonts, sizes, terminal
- *  padding and opacity) with the person's zoom and sounds. */
+ *  padding and opacity) with the person's zoom and sounds. `language` is the language
+ *  in use, `"en"` or `"zh-CN"`, after following the system when settings.json leaves it unset. */
 export function settings(): Record<string, unknown>;
+
+/** An interface string for the current language. Missing keys fall back to English, then the key.
+ *  `{name}` in the string is replaced from `vars` (strings and numbers). */
+export function t(key: string, vars?: Record<string, string | number>): string;
 
 /** Every key binding: { section, keys, action }. */
 export function keys(): { section: string; keys: string; action: string }[];
